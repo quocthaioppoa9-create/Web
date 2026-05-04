@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ban-management-system
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_PASSWORD
+        value: Thai777@
+      - key: SESSION_SECRET
+        generateValue: true
