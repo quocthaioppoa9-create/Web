@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ban Management System - Login</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+
+  <!-- Animated Background Particles -->
+  <div class="bg-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      
+      <!-- Logo/Header -->
+      <div class="login-header">
+        <div class="login-icon">🔨</div>
+        <h1 class="login-title">Ban Management</h1>
+        <p class="login-subtitle">Roblox Admin System</p>
+      </div>
+
+      <!-- Login Form -->
+      <form class="login-form" id="loginForm">
+        
+        <div class="form-group">
+          <label class="form-label" for="password">
+            <span class="label-icon">🔐</span>
+            Admin Password
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="password" 
+              name="password"
+              class="form-input" 
+              placeholder="Enter admin password"
+              autocomplete="current-password"
+              required
+            >
+            <button type="button" class="toggle-password" id="togglePwd" title="Show/Hide password">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMsg" style="display:none;">
+          <span>❌</span>
+          <span id="errorText">Invalid password. Please try again.</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+          <span class="btn-text">🚀 LOGIN</span>
+          <span class="btn-loader" style="display:none;">⏳ Logging in...</span>
+        </button>
+
+      </form>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>🛡️ Authorized personnel only</p>
+        <p class="version-text">Ban System v2.0</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // LOGIN PAGE JAVASCRIPT
+    // ============================================================
+
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const passwordInput = document.getElementById('password');
+    const togglePwd = document.getElementById('togglePwd');
+
+    // Check if already logged in
+    fetch('/api/auth/status')
+      .then(r => r.json())
+      .then(data => {
+        if (data.authenticated) {
+          window.location.href = '/dashboard';
+        }
+      })
+      .catch(() => {});
+
+    // Toggle password visibility
+    togglePwd.addEventListener('click', () => {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        togglePwd.textContent = '🙈';
+      } else {
+        passwordInput.type = 'password';
+        togglePwd.textContent = '👁️';
+      }
+    });
+
+    // Handle login form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const password = passwordInput.value;
+      if (!password) return;
+
+      // Show loading state
+      setLoading(true);
+      hideError();
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Success - redirect
+          loginBtn.querySelector('.btn-text').textContent = '✅ Success!';
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 500);
+        } else {
+          // Failed
+          setLoading(false);
+          showError(data.error || 'Invalid password. Please try again.');
+          passwordInput.value = '';
+          passwordInput.focus();
+          
+          // Shake animation
+          loginBtn.closest('.login-card').classList.add('shake');
+          setTimeout(() => {
+            loginBtn.closest('.login-card').classList.remove('shake');
+          }, 500);
+        }
+      } catch (err) {
+        setLoading(false);
+        showError('Connection error. Please try again.');
+      }
+    });
+
+    function setLoading(loading) {
+      const btnText = loginBtn.querySelector('.btn-text');
+      const btnLoader = loginBtn.querySelector('.btn-loader');
+      loginBtn.disabled = loading;
+      
+      if (loading) {
+        btnText.style.display = 'none';
+        btnLoader.style.display = 'inline';
+      } else {
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+      }
+    }
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorMsg.style.display = 'flex';
+    }
+
+    function hideError() {
+      errorMsg.style.display = 'none';
+    }
+
+    // Enter key support
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        loginForm.dispatchEvent(new Event('submit'));
+      }
+    });
+  </script>
+</body>
+  </html>
